@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    
+    triggers {
+        cron('0 06 * * *')
+    }
+
+    tools {
+        maven "Maven"
+        jdk "JDK17"
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                script {
+                    git url: 'https://github.com/17-kajal/Test.git'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    bat "mvn clean compile -DskipTests=true"
+                }
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                script {
+                    bat "mvn test"
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Deploying to production..."
+            }
+        }
+    }
+
+    post {
+        success {
+            junit '**/target/surefire-reports/TEST-*.xml'
+        }
+        
+        failure {
+            echo "Pipeline failed, sending notification..."
+        }
+    }
+}
